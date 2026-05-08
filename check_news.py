@@ -33,28 +33,20 @@ title = title_tag.get_text(strip=True) if title_tag else "Nuova News"
 
 # Immagine
 img_tag = article.select_one("img")
-image = img_tag.get("src") if img_tag else None
 
-if image and image.startswith("/"):
-    image = "https://www.yugioh-card.com" + image
+image = None
 
-LAST_FILE = "last_news.txt"
+if img_tag:
 
-last_link = ""
+    image = (
+        img_tag.get("src")
+        or img_tag.get("data-src")
+        or img_tag.get("data-lazy-src")
+    )
 
-if os.path.exists(LAST_FILE):
-    with open(LAST_FILE, "r") as f:
-        last_link = f.read().strip()
-
-if link != last_link:
-
-    embed = {
-        "title": title,
-        "url": link,
-        "description": "📰 Nuova news dal sito ufficiale Yu-Gi-Oh!",
-        "color": 16711680
-    }
-
+    if image and image.startswith("/"):
+        image = "https://www.yugioh-card.com" + image
+        
     # Aggiunge immagine se esiste
     if image:
         embed["image"] = {
