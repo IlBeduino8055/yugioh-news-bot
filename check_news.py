@@ -1,44 +1,60 @@
 import requests
 from bs4 import BeautifulSoup
 import os
-import json
 
 WEBHOOK_URL = os.environ['WEBHOOK_URL']
 
-URL = "https://www.yugioh-card.com/en/news/"
+URL = "https://www.yugioh-card.com/eu/news/"
 
-response = requests.get(URL)
+headers = {
+    "User-Agent": "Mozilla/5.0"
+}
+
+response = requests.get(URL, headers=headers)
 soup = BeautifulSoup(response.text, "html.parser")
 
-article = soup.find("a")
+# Cerca la prima news vera
+article = soup.select_one("article a")
 
-title = article.text.strip()
+if article is None:
+    print("Nessuna news trovata")
+    exit()
+
+title = article.get_text(strip=True)
 link = article.get("href")
 
-if not link.startswith("http"):
+# Sistema link relativo
+if link.startswith("/"):
     link = "https://www.yugioh-card.com" + link
 
-last_news_file = "last_news.txt"
+LAST_FILE = "last_news.txt"
 
-last_news = ""
+last_link = ""
 
-if os.path.exists(last_news_file):
-    with open(last_news_file, "r") as f:
-        last_news = f.read().strip()
+if os.path.exists(LAST_FILE):
+    with open(LAST_FILE, "r") as f:
+        last_link = f.read().strip()
 
-if link != last_news:
+# Invia solo se nuova
+if link != last_link:
 
     data = {
         "username": "Yu-Gi-Oh News",
-        "embeds": [{
-            "title": title,
-            "description": "Nuova news trovata!",
-            "url": link,
-            "color": 16711680
-        }]
+        "embeds": [
+            {
+                "title": title,
+                "url": link,
+                "description": "📰 Nuova news dal sito ufficiale Yu-Gi-Oh!",
+                "color": 16711680
+            }
+        ]
     }
 
     requests.post(WEBHOOK_URL, json=data)
 
-    with open(last_news_file, "w") as f:
+    with open(LAST_FILE, "w") as f:
         f.write(link)
+
+    print("Nuova news inviata!")
+else:
+    print("Nessuna nuova news")
