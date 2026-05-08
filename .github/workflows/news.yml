@@ -1,0 +1,28 @@
+name: YuGiOh News Bot
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+
+  workflow_dispatch:
+
+jobs:
+  run-script:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clona repo
+        uses: actions/checkout@v4
+
+      - name: Installa Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Installa librerie
+        run: pip install -r requirements.txt
+
+      - name: Avvia script
+        env:
+          WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
+        run: python check_news.py
